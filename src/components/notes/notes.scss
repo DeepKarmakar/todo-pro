@@ -1,0 +1,92 @@
+.notes {
+  position: relative;
+}
+.notesContainer {
+  display: inline-flex;
+  flex-wrap: wrap;
+  position: relative;
+  &.hide {
+    height: 0;
+    overflow: hidden;
+  }
+}
+
+$note_bkg: (#f3f5f7, #e7f5fb, #fff4e0, #ffe9f4, #e7fbe9, #f8fbe7);
+.notesItemWrappper {
+  flex: 0 0 50%;
+  padding: 10px;
+  position: relative;
+  .notesItemInner {
+    padding: 15px;
+    border-radius: 8px;
+    position: relative;
+    h4 {
+      color: #212121;
+      margin: 0 0 10px;
+    }
+    .noteContent {
+      color: #363636;
+      line-height: 24px;
+    }
+    .noteDate {
+      color: #8c8c8c;
+      font-style: italic;
+      font-size: 14px;
+      margin: 0;
+    }
+  }
+  &.addnewWrapper {
+    .notesItemInner {
+      height: 170px;
+    }
+  }
+  .addNewImg {
+    position: absolute;
+    right: 2px;
+    bottom: 1px;
+  }
+  @for $i from 1 through 6 {
+    &:nth-child(6n + #{$i}) .notesItemInner {
+      background-color: nth($note_bkg, $i);
+    }
+  }
+}
+
+// new notes
+.newNotesHolder {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  background: #fbfbfb;
+  border-radius: 8px;
+  height: 330px;
+  & > .d-flex {
+    border-radius: 8px 8px 0 0;
+  }
+}
+.white-bkg {
+  background-color: #fff;
+}
+
+.form-group {
+  padding: 25px;
+  .form-control {
+    margin-bottom: 20px;
+    input,
+    textarea {
+      background: #fff;
+      border: solid 1px #ddd;
+      padding: 12px;
+      width: 100%;
+      margin-top: 8px;
+      &:focus {
+        border-color: rgb(179, 179, 179);
+        outline: none;
+      }
+    }
+    textarea {
+      height: 100px;
+    }
+  }
+}

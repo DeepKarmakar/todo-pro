@@ -1,0 +1,57 @@
+$primary-color: #2bc2ec;
+
+.App {
+  height: 100vh;
+}
+.App-header {
+  height: 50px;
+  padding: 8px 0;
+}
+.menu {
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  li {
+    display: inline-block;
+    margin: 0 80px;
+    font-weight: bold;
+    font-size: 22px;
+    cursor: pointer;
+    position: relative;
+    &.active:after {
+      content: "";
+      position: absolute;
+      bottom: -5px;
+      width: 100%;
+      left: 0;
+      height: 3px;
+      background-color: var(--primary-color);
+    }
+  }
+}
+.container {
+  width: 500px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+main {
+  min-height: calc(100vh - 50px);
+  background-color: #4a4a4a;
+  position: relative;
+  padding: 25px;
+}
+.d-flex {
+  display: flex;
+}
+.justify-content-between {
+  justify-content: space-between;
+}
+.align-center {
+  align-items: center;
+}
+.p-10 {
+  padding: 10px;
+}
+.cur-pointer {
+  cursor: pointer;
+}

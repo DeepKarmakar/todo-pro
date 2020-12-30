@@ -1,23 +1,33 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from "react";
+import "./App.scss";
+import Notes from "./components/notes/Notes";
+import Todo from "./components/todo/Todo";
 
 function App() {
+  const [isTodo, setIsTodo] = useState(true);
+  const setTodo = (val) => {
+    setIsTodo(val);
+  };
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <ul className="menu">
+          <li className={isTodo ? "active" : ""} onClick={() => setTodo(true)}>
+            ToDo
+          </li>
+          <li
+            className={!isTodo ? "active" : ""}
+            onClick={() => setTodo(false)}
+          >
+            Notes
+          </li>
+        </ul>
       </header>
+      <main>
+        <div className="container">
+          {isTodo ? <Todo></Todo> : <Notes></Notes>}
+        </div>
+      </main>
     </div>
   );
 }
