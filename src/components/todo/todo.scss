@@ -37,13 +37,49 @@
       border: 0;
     }
     .item-action {
-      width: 45px;
       display: flex;
       justify-content: space-between;
-      margin-left: 20px;
-      span {
+      svg {
         cursor: pointer;
+        margin-left: 8px;
       }
+    }
+    label {
+      .checked {
+        display: none;
+      }
+      svg {
+        vertical-align: middle;
+      }
+      input[type="checkbox"] {
+        visibility: hidden;
+        position: absolute;
+        left: -999px;
+        &:checked ~ .checked {
+          display: inline-block;
+        }
+        &:checked ~ .unCheck {
+          display: none;
+        }
+      }
+    }
+  }
+}
+.editing {
+  label {
+    width: calc(100% - 60px);
+    input[type="checkbox"],
+    svg {
+      display: none !important;
+    }
+  }
+  span {
+    display: inline-block;
+    width: 100%;
+    input[type="text"] {
+      width: 100%;
+      border: 0;
+      font-size: 16px;
     }
   }
 }
