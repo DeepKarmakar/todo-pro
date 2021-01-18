@@ -9,6 +9,8 @@ import {
   Trash,
   X,
 } from "react-bootstrap-icons";
+import * as http from "../../http";
+import { toast } from "react-toastify";
 
 export default function Todo() {
   const [todos, setTodos] = useState([]);
@@ -18,27 +20,40 @@ export default function Todo() {
   const addTodoHandeler = (event) => {
     event.preventDefault();
     if (todoName) {
-      db.collection("todos").add({
+      const addTodoReq = {
         isDone: false,
         name: todoName,
-      });
+      };
+      http.addDoc("todos", addTodoReq).then(
+        (res) => {
+          addTodoReq.id = res.id;
+          todos.unshift(addTodoReq);
+          setTodos([...todos]);
+          toast.success(res.message);
+        },
+        (error) => {
+          console.log(error);
+          toast.error(error.message);
+        }
+      );
       setTodoName("");
     }
   };
 
-  const deleteHandeler = (docId) => {
+  const deleteHandeler = (todoItem, index) => {
     let isDeleteConfirm = window.confirm("Want to delete?");
     if (isDeleteConfirm) {
-      const docRef = db.collection("todos").doc(docId);
-
-      docRef
-        .delete()
-        .then(() => {
-          console.log("deleted");
-        })
-        .catch((error) => {
-          console.log("not deleted");
-        });
+      http.deleteDoc("todos", todoItem.id).then(
+        (res) => {
+          todos.splice(index, 1);
+          setTodos([...todos]);
+          toast.success(res.message);
+        },
+        (error) => {
+          toast.error(error.message);
+          console.log(error);
+        }
+      );
     }
   };
 
@@ -50,10 +65,7 @@ export default function Todo() {
     });
     todoItem.isEditing = true;
     setTodos([...todos]);
-    console.log(todos);
-
     setEditTodo(todoItem.name);
-    // document.getElementById("editInp").focus();
   };
 
   const updateHandeler = (todoItem, event = null) => {
@@ -66,14 +78,16 @@ export default function Todo() {
       name: editTodo,
       isDone: false,
     };
-    console.log(updateObj);
-    const docRef = db.collection("todos").doc(todoItem.id);
-    docRef
-      .update(updateObj)
-      .then(() => {
-        console.log("Doc updated successfully");
+
+    http
+      .updateDoc("todos", todoItem.id, updateObj)
+      .then((res) => {
+        todoItem.name = editTodo;
+        toast.success(res.message);
+        setTodos([...todos]);
       })
       .catch((error) => {
+        toast.error(error.message);
         console.log(error);
       });
   };
@@ -88,17 +102,15 @@ export default function Todo() {
   };
 
   useEffect(() => {
-    db.collection("todos").onSnapshot((snapshot) => {
-      console.log(snapshot.docs);
-      const todoArr = [];
-      snapshot.docs.map((doc) => {
-        let constTodoObj = {};
-        constTodoObj = { ...doc.data() };
-        constTodoObj.id = doc.id;
-        todoArr.push(constTodoObj);
-      });
-      setTodos(todoArr);
-    });
+    http.getAllDocs("todos").then(
+      (data) => {
+        setTodos(data);
+      },
+      (error) => {
+        toast.error("Something went wrong!");
+        console.log(error);
+      }
+    );
   }, []);
 
   return (
@@ -125,7 +137,7 @@ export default function Todo() {
         </form>
       </div>
       <ul className="todoList">
-        {todos.map((todo) => (
+        {todos.map((todo, index) => (
           <li key={todo.id} className={todo.isEditing ? "editing" : ""}>
             <label>
               <input type="checkbox" />
@@ -161,7 +173,7 @@ export default function Todo() {
                   <PencilSquare
                     onClick={() => editHandeler(todo)}
                   ></PencilSquare>
-                  <Trash onClick={() => deleteHandeler(todo.id)}></Trash>
+                  <Trash onClick={() => deleteHandeler(todo, index)}></Trash>
                 </>
               )}
             </div>

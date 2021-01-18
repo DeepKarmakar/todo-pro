@@ -1,59 +1,121 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./notes.scss";
 import addNewImg from "../../assets/images/add-notes-bkg.png";
-import { ArrowLeft, Plus } from "react-bootstrap-icons";
+import { ArrowLeft, Plus, Trash } from "react-bootstrap-icons";
+import * as http from "../../http";
+import firebase from "firebase";
+import { toast } from "react-toastify";
+import db from "../../firebase";
 
 export default function Notes() {
-  const notes = [
-    {
-      title: "notes title",
-      content:
-        "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ut quae sit fugit minus aspernatur voluptate praesentium, voluptatem quam minima, accusantium debitis omnis. Blanditiis iure omnis, consequatur velit qui repellat porro!",
-      date: "20 may",
-    },
-    {
-      title: "notes title",
-      content:
-        "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ut quae sit fugit minus aspernatur voluptate praesentium,  iure omnis, consequatur velit qui repellat porro!",
-      date: "20 may",
-    },
-    {
-      title: "notes title",
-      content:
-        "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ut quae sit fugit minus aspernatur voluptate praesentium, voluptatem quam minima, accusantium debitis omnis. Blanditiis iure omnis, consequatur velit qui repellat porro! voluptatem quam minima, accusantium debitis omnis. Blanditiis",
-      date: "20 may",
-    },
-    {
-      title: "notes title",
-      content:
-        "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ut quae sit fugit minus aspernatur voluptate praesentium, voluptatem quam minima,  porro!",
-      date: "20 may",
-    },
-    {
-      title: "notes title",
-      content:
-        "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ut quae sit fugit minus aspernatur voluptate praesentium, voluptatem quam minima, accusantium debitis omnis. Blanditiis iure omnis, consequatur velit qui repellat porro! voluptatem quam minima, accusantium debitis omnis. Blanditiis",
-      date: "20 may",
-    },
-    {
-      title: "notes title",
-      content:
-        "Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ut quae sit fugit minus aspernatur voluptate praesentium, voluptatem quam minima,  porro!",
-      date: "20 may",
-    },
-  ];
+  const [notes, setNotes] = useState([]);
   const [isNewNotes, setisNewNotes] = useState(false);
+  const [currentNote, setCurrentNote] = useState({});
+  const [addNoteForm, setAddNoteForm] = useState({
+    title: "",
+    description: "",
+  });
+  const [updateId, setUpdateId] = useState("");
 
-  const updateNewNotes = () => {
+  const updateNotesContainer = () => {
     setisNewNotes(!isNewNotes);
   };
+
+  const onChangeHandeler = (event) => {
+    setAddNoteForm({ ...addNoteForm, [event.target.name]: event.target.value });
+  };
+
+  const clear = () => {
+    setAddNoteForm({
+      title: "",
+      description: "",
+    });
+    setUpdateId("");
+  };
+
+  const addNewNotes = () => {
+    updateNotesContainer();
+    if (!addNoteForm.title && !addNoteForm.description) {
+      return;
+    }
+    addNoteForm.timestamp = firebase.firestore.FieldValue.serverTimestamp();
+    if (updateId) {
+      http.updateDoc("notes", updateId, addNoteForm).then(
+        (res) => {
+          toast.success(res.message);
+          clear();
+        },
+        (err) => {
+          toast.error(err.message);
+          clear();
+        }
+      );
+    } else {
+      http.addDoc("notes", addNoteForm).then(
+        (res) => {
+          toast.success(res.message);
+        },
+        (err) => {
+          toast.error(err.message);
+        }
+      );
+    }
+  };
+
+  const getTime = (timestamp) => {
+    if (!timestamp) {
+      return;
+    }
+    const time = new Date(timestamp.toDate());
+    return `${time.getDate()}/${time.getMonth() + 1}/${time.getFullYear()}`;
+  };
+
+  const deleteHandeler = (noteItem, index) => {
+    let isDeleteConfirm = window.confirm("Want to delete?");
+    if (isDeleteConfirm) {
+      http.deleteDoc("notes", noteItem.id).then(
+        (res) => {
+          toast.success(res.message);
+          console.log(res);
+        },
+        (error) => {
+          toast.error(error.message);
+        }
+      );
+    }
+  };
+
+  const editNote = (noteItem) => {
+    console.log(noteItem);
+    updateNotesContainer();
+    setUpdateId(noteItem.id);
+    // setCurrentNote(noteItem);
+    addNoteForm.title = noteItem.title || "";
+    addNoteForm.description = noteItem.description || "";
+    setAddNoteForm(addNoteForm);
+    console.log(addNoteForm);
+  };
+
+  useEffect(() => {
+    db.collection("notes")
+      .orderBy("timestamp", "desc")
+      .onSnapshot((snapshot) => {
+        setNotes(
+          snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+        );
+      });
+  }, []);
+
   return (
-    <div className="notes">
+    <div className={notes.length == 0 ? "notes noNotes" : "notes"}>
       <div className={isNewNotes ? "notesContainer hide" : "notesContainer"}>
         {/* add new item start */}
         <div
           className="notesItemWrappper addnewWrapper"
-          onClick={updateNewNotes}
+          onClick={updateNotesContainer}
         >
           <div className="notesItemInner cur-pointer">
             <h4>
@@ -63,15 +125,19 @@ export default function Notes() {
           </div>
         </div>
         {/* add new item end */}
-
         {notes.map((note, index) => (
           <div className="notesItemWrappper" key={index}>
-            <div className="notesItemInner">
-              <h4>{note.title}</h4>
+            <Trash
+              color="red"
+              className="trash"
+              onClick={() => deleteHandeler(note, index)}
+            ></Trash>
+            <div className="notesItemInner" onClick={() => editNote(note)}>
+              {note.title ? <h4>{note.title}</h4> : ""}
               <div className="noteContent">
-                <p>{note.content}</p>
+                <p>{note.description}</p>
               </div>
-              <p className="noteDate">{note.date}</p>
+              <p className="noteDate">{getTime(note.timestamp)}</p>
             </div>
           </div>
         ))}
@@ -79,18 +145,27 @@ export default function Notes() {
       {isNewNotes && (
         <div className="newNotesHolder">
           <div className="d-flex justify-content-between p-10 white-bkg align-center">
-            <ArrowLeft onClick={updateNewNotes} className="cur-pointer" />
+            <ArrowLeft onClick={addNewNotes} className="cur-pointer" />
             <strong>Add Notes</strong>
             <div></div>
           </div>
           <div className="form-group">
             <div className="form-control">
               <label>Title</label>
-              <input type="text" />
+              <input
+                type="text"
+                value={addNoteForm.title}
+                name="title"
+                onChange={(event) => onChangeHandeler(event)}
+              />
             </div>
             <div className="form-control">
               <label>Description</label>
-              <textarea></textarea>
+              <textarea
+                name="description"
+                value={addNoteForm.description}
+                onChange={(event) => onChangeHandeler(event)}
+              ></textarea>
             </div>
           </div>
         </div>

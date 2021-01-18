@@ -2,6 +2,8 @@ import { useState } from "react";
 import "./App.scss";
 import Notes from "./components/notes/Notes";
 import Todo from "./components/todo/Todo";
+import { Slide, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const [isTodo, setIsTodo] = useState(true);
@@ -28,6 +30,18 @@ function App() {
           {isTodo ? <Todo></Todo> : <Notes></Notes>}
         </div>
       </main>
+      <ToastContainer
+        position="bottom-center"
+        autoClose={2000}
+        transition={Slide}
+        hideProgressBar={true}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 }

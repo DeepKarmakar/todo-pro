@@ -1,10 +1,16 @@
 .notes {
   position: relative;
+  &.noNotes {
+    .addnewWrapper {
+      margin: 0 auto;
+    }
+  }
 }
 .notesContainer {
   display: inline-flex;
   flex-wrap: wrap;
   position: relative;
+  width: 100%;
   &.hide {
     height: 0;
     overflow: hidden;
@@ -20,6 +26,8 @@ $note_bkg: (#f3f5f7, #e7f5fb, #fff4e0, #ffe9f4, #e7fbe9, #f8fbe7);
     padding: 15px;
     border-radius: 8px;
     position: relative;
+    cursor: pointer;
+    word-break: break-word;
     h4 {
       color: #212121;
       margin: 0 0 10px;
@@ -27,6 +35,9 @@ $note_bkg: (#f3f5f7, #e7f5fb, #fff4e0, #ffe9f4, #e7fbe9, #f8fbe7);
     .noteContent {
       color: #363636;
       line-height: 24px;
+      p {
+        margin-top: 0;
+      }
     }
     .noteDate {
       color: #8c8c8c;
@@ -35,9 +46,23 @@ $note_bkg: (#f3f5f7, #e7f5fb, #fff4e0, #ffe9f4, #e7fbe9, #f8fbe7);
       margin: 0;
     }
   }
+  .trash {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 9;
+    opacity: 0;
+    cursor: pointer;
+  }
+  &:hover {
+    .trash {
+      opacity: 1;
+    }
+  }
   &.addnewWrapper {
     .notesItemInner {
       height: 170px;
+      min-width: 230px;
     }
   }
   .addNewImg {
