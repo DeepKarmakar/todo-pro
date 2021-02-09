@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import "./todo.scss";
-import db from "../../firebase";
 import {
   Check2,
   Check2Square,
@@ -11,11 +10,14 @@ import {
 } from "react-bootstrap-icons";
 import * as http from "../../http";
 import { toast } from "react-toastify";
+import { useAuth } from "../../context/authContext";
+import firebase from "firebase";
 
 export default function Todo() {
   const [todos, setTodos] = useState([]);
   const [todoName, setTodoName] = useState("");
   const [editTodo, setEditTodo] = useState("");
+  const { currentUser } = useAuth();
 
   const addTodoHandeler = (event) => {
     event.preventDefault();
@@ -23,8 +25,9 @@ export default function Todo() {
       const addTodoReq = {
         isDone: false,
         name: todoName,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
       };
-      http.addDoc("todos", addTodoReq).then(
+      http.addDoc("todos", addTodoReq, currentUser.uid).then(
         (res) => {
           addTodoReq.id = res.id;
           todos.unshift(addTodoReq);
@@ -43,7 +46,7 @@ export default function Todo() {
   const deleteHandeler = (todoItem, index) => {
     let isDeleteConfirm = window.confirm("Want to delete?");
     if (isDeleteConfirm) {
-      http.deleteDoc("todos", todoItem.id).then(
+      http.deleteDoc("todos", todoItem.id, currentUser.uid).then(
         (res) => {
           todos.splice(index, 1);
           setTodos([...todos]);
@@ -68,21 +71,31 @@ export default function Todo() {
     setEditTodo(todoItem.name);
   };
 
-  const updateHandeler = (todoItem, event = null) => {
-    debugger;
-    if (event) {
-      event.preventDefault();
+  const updateHandeler = (todoItem, event = null, isDoneUpdate = false) => {
+    let updateObj;
+    if (isDoneUpdate) {
+      updateObj = {
+        name: todoItem.name,
+        isDone: event.target.checked,
+      };
+    } else {
+      if (event) {
+        event.preventDefault();
+      }
+      delete todoItem.isEditing;
+      updateObj = {
+        name: editTodo,
+        isDone: false,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      };
     }
-    delete todoItem.isEditing;
-    const updateObj = {
-      name: editTodo,
-      isDone: false,
-    };
 
     http
-      .updateDoc("todos", todoItem.id, updateObj)
+      .updateDoc("todos", todoItem.id, updateObj, currentUser.uid)
       .then((res) => {
-        todoItem.name = editTodo;
+        if (!isDoneUpdate) {
+          todoItem.name = editTodo;
+        }
         toast.success(res.message);
         setTodos([...todos]);
       })
@@ -102,9 +115,10 @@ export default function Todo() {
   };
 
   useEffect(() => {
-    http.getAllDocs("todos").then(
+    http.getAllDocs("todos", currentUser.uid).then(
       (data) => {
         setTodos(data);
+        console.log(data);
       },
       (error) => {
         toast.error("Something went wrong!");
@@ -140,7 +154,14 @@ export default function Todo() {
         {todos.map((todo, index) => (
           <li key={todo.id} className={todo.isEditing ? "editing" : ""}>
             <label>
-              <input type="checkbox" />
+              <input
+                type="checkbox"
+                onChange={(event) => {
+                  todo.isDone = event.target.checked;
+                  updateHandeler(todo, event, true);
+                }}
+                checked={todo.isDone}
+              />
               <Square className="unCheck" size={15}></Square>
               <Check2Square className="checked" size={18}></Check2Square>
               <span className="ml-5">

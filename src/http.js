@@ -1,9 +1,12 @@
 import db from "./firebase";
 
-export const getAllDocs = (collectionName) =>
+export const getAllDocs = (collectionName, uid) =>
   new Promise((resolve, reject) => {
     const docRef = db.collection(collectionName);
     docRef
+      .doc(uid)
+      .collection("todoList")
+      .orderBy("timestamp", "desc")
       .get()
       .then((querySnapshot) => {
         const docs = [];
@@ -23,9 +26,11 @@ export const getAllDocs = (collectionName) =>
       });
   });
 
-export const addDoc = (collectionName, req) =>
+export const addDoc = (collectionName, req, uid) =>
   new Promise((resolve, reject) => {
     db.collection(collectionName)
+      .doc(uid)
+      .collection("todoList")
       .add(req)
       .then((docRef) => {
         resolve({
@@ -42,9 +47,13 @@ export const addDoc = (collectionName, req) =>
       });
   });
 
-export const deleteDoc = (collectionName, docId) =>
+export const deleteDoc = (collectionName, docId, uid) =>
   new Promise((resolve, reject) => {
-    const docRef = db.collection(collectionName).doc(docId);
+    const docRef = db
+      .collection(collectionName)
+      .doc(uid)
+      .collection("todoList")
+      .doc(docId);
     docRef
       .delete()
       .then(() => {
@@ -61,9 +70,13 @@ export const deleteDoc = (collectionName, docId) =>
       });
   });
 
-export const updateDoc = (collectionName, docId, req) =>
+export const updateDoc = (collectionName, docId, req, uid) =>
   new Promise((resolve, reject) => {
-    const docRef = db.collection(collectionName).doc(docId);
+    const docRef = db
+      .collection(collectionName)
+      .doc(uid)
+      .collection("todoList")
+      .doc(docId);
     docRef
       .update(req)
       .then((res) => {

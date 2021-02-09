@@ -6,16 +6,17 @@ import * as http from "../../http";
 import firebase from "firebase";
 import { toast } from "react-toastify";
 import db from "../../firebase";
+import { useAuth } from "../../context/authContext";
 
 export default function Notes() {
   const [notes, setNotes] = useState([]);
   const [isNewNotes, setisNewNotes] = useState(false);
-  const [currentNote, setCurrentNote] = useState({});
   const [addNoteForm, setAddNoteForm] = useState({
     title: "",
     description: "",
   });
   const [updateId, setUpdateId] = useState("");
+  const { currentUser } = useAuth();
 
   const updateNotesContainer = () => {
     setisNewNotes(!isNewNotes);
@@ -26,6 +27,7 @@ export default function Notes() {
   };
 
   const clear = () => {
+    debugger;
     setAddNoteForm({
       title: "",
       description: "",
@@ -40,7 +42,7 @@ export default function Notes() {
     }
     addNoteForm.timestamp = firebase.firestore.FieldValue.serverTimestamp();
     if (updateId) {
-      http.updateDoc("notes", updateId, addNoteForm).then(
+      http.updateDoc("notes", updateId, addNoteForm, currentUser.uid).then(
         (res) => {
           toast.success(res.message);
           clear();
@@ -51,12 +53,14 @@ export default function Notes() {
         }
       );
     } else {
-      http.addDoc("notes", addNoteForm).then(
+      http.addDoc("notes", addNoteForm, currentUser.uid).then(
         (res) => {
           toast.success(res.message);
+          clear();
         },
         (err) => {
           toast.error(err.message);
+          clear();
         }
       );
     }
@@ -73,7 +77,7 @@ export default function Notes() {
   const deleteHandeler = (noteItem, index) => {
     let isDeleteConfirm = window.confirm("Want to delete?");
     if (isDeleteConfirm) {
-      http.deleteDoc("notes", noteItem.id).then(
+      http.deleteDoc("notes", noteItem.id, currentUser.uid).then(
         (res) => {
           toast.success(res.message);
           console.log(res);
@@ -98,8 +102,11 @@ export default function Notes() {
 
   useEffect(() => {
     db.collection("notes")
+      .doc(currentUser.uid)
+      .collection("todoList")
       .orderBy("timestamp", "desc")
       .onSnapshot((snapshot) => {
+        debugger;
         setNotes(
           snapshot.docs.map((doc) => ({
             id: doc.id,
@@ -110,7 +117,7 @@ export default function Notes() {
   }, []);
 
   return (
-    <div className={notes.length == 0 ? "notes noNotes" : "notes"}>
+    <div className={notes.length === 0 ? "notes noNotes" : "notes"}>
       <div className={isNewNotes ? "notesContainer hide" : "notesContainer"}>
         {/* add new item start */}
         <div
